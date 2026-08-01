@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظم الروابط الذكي Pro - سحابي</title>
+    <style>
+        :root { --primary: #4361ee; --bg: #f4f7f6; --card: #ffffff; --text: #2b2d42; --border: #e2e8f0; --success: #06d6a0; --danger: #ef476f; }
+        [data-theme="dark"] { --bg: #1a1a2e; --card: #16213e; --text: #edf2f4; --border: #243447; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        .controls-top { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+        .controls-top input[type="text"] { flex-grow: 1; min-width: 250px; margin-bottom: 0; }
+        
+        .form-card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--border); position: relative;}
+        
+        #loadingOverlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; border-radius: 15px; z-index: 10; font-weight: bold; color: var(--primary);}
+        [data-theme="dark"] #loadingOverlay { background: rgba(22, 33, 62, 0.8); }
+
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); box-sizing: border-box; font-family: inherit; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: opacity 0.2s; white-space: nowrap; }
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { border: 1px solid var(--border); background: var(--card); color: var(--text); }
+        .btn-print { background: #2d3436; color: white; }
+        .btn-warning { background: #fca311; color: white; }
+        
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding: 5px; scrollbar-width: thin; }
+        .filter-tag { padding: 6px 15px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .filter-tag.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .link-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); position: relative; transition: transform 0.2s; }
+        .link-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .link-card.pinned { border-right: 4px solid var(--primary); }
+        .link-title { font-weight: bold; color: var(--primary); text-decoration: none; display: block; margin-bottom: 5px; font-size: 1.1rem; line-height: 1.4; }
+        .link-desc { font-size: 0.9rem; color: #718096; margin-bottom: 15px; }
+        .card-actions { border-top: 1px solid var(--border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; border-radius: 5px; transition: background 0.2s; }
+        .icon-btn:hover { background: var(--bg); }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 30px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        @media print { body { background: white; color: black; padding: 0; } .form-card, .controls-top, .filters, .card-actions, #themeBtn, #cancelBtn, .icon-btn { display: none !important; } .links-grid { display: block; } .link-card { border: none; border-bottom: 1px solid #ccc; margin-bottom: 15px; padding: 10px 0; break-inside: avoid; } .link-title { font-size: 1.2rem; color: black; text-decoration: underline; } .link-desc::after { content: " [" attr(data-url) "]"; color: #555; font-size: 0.8rem; display: block; margin-top: 5px; } }
+    </style>
+</head>
+<body>
+
+<div id="toast">✅ تم الإجراء بنجاح!</div>
+
+<div class="container">
+    <header>
+        <h1>☁️ منظم الروابط السحابي</h1>
+        <div style="display:flex; gap:10px; align-items: center;">
+            <span id="linkCounter" class="stats-badge" style="font-weight: bold;">جاري التحميل... ⏳</span>
+            <button onclick="toggleTheme()" class="btn btn-outline" id="themeBtn" title="تبديل المظهر">🌙</button>
+        </div>
+    </header>
+
+    <div class="controls-top">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث في الروابط، التصنيفات، أو الوصف..." oninput="renderApp()">
+        
+        <button onclick="migrateOldLinks()" class="btn btn-warning">🔄 استرجاع محلي للسحابة</button>
+        <button onclick="exportData()" class="btn btn-outline">📥 تصدير</button>
+        <button onclick="document.getElementById('importFile').click()" class="btn btn-outline">📤 استرداد من ملف</button>
+        <input type="file" id="importFile" class="hidden" accept=".json" onchange="importToCloud(event)">
+        <button onclick="window.print()" class="btn btn-print">🖨️ طباعة</button>
+    </div>
+
+    <div class="form-card">
+        <div id="loadingOverlay">جاري العمليات... ☁️</div>
+        <h3 id="formTitle">إضافة رابط جديد</h3>
+        <form id="linkForm">
+            <input type="hidden" id="editId">
+            <input type="url" id="linkUrl" placeholder="🔗 أضف الرابط هنا (مثال: https://example.com)" required>
+            <input type="text" id="linkCategory" list="categorySuggestions" placeholder="📂 اختر تصنيفاً أو اكتب تصنيفاً جديداً..." autocomplete="off" required>
+            <datalist id="categorySuggestions"></datalist>
+            <textarea id="linkDesc" rows="2" placeholder="📝 شرح مختصر للرابط (اختياري)..."></textarea>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="submit" class="btn btn-primary" id="saveBtn">💾 حفظ الرابط</button>
+                <button type="button" onclick="resetForm()" class="btn btn-outline hidden" id="cancelBtn">❌ إلغاء التعديل</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="filters" id="categoryFilters"></div>
+    <div class="links-grid" id="linksContainer"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+    // إعدادات مشروعك
+    const firebaseConfig = {
+        apiKey: "AIzaSyA6sVrvnlSoXNy1aiqdT5QfP_NPtIbAvm8",
+        authDomain: "azzamlinks-organizer.firebaseapp.com",
+        projectId: "azzamlinks-organizer",
+        storageBucket: "azzamlinks-organizer.firebasestorage.app",
+        messagingSenderId: "572643396456",
+        appId: "1:572643396456:web:e1b15708e9b9511845a4dd"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.linksArray = [];
+    window.currentFilter = 'الكل';
+
+    const linkForm = document.getElementById('linkForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // 1. جلب البيانات
+    async function fetchLinks() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "links"));
+            window.linksArray = [];
+            querySnapshot.forEach((doc) => {
+                window.linksArray.push({ id: doc.id, ...doc.data() });
+            });
+            window.linksArray.sort((a, b) => b.pinned - a.pinned || b.timestamp - a.timestamp);
+            window.renderApp();
+        } catch (error) {
+            console.error("خطأ:", error);
+            document.getElementById('linkCounter').innerText = "خطأ في الاتصال ❌";
+        }
+    }
+
+    // 2. دالة نقل الروابط القديمة من المتصفح إلى السحابة
+    window.migrateOldLinks = async function() {
+        const oldLinks = JSON.parse(localStorage.getItem('finalLinks')) || [];
+        
+        if (oldLinks.length === 0) {
+            alert("لا يوجد روابط قديمة محفوظة في متصفحك الحالي.");
+            return;
+        }
+
+        if(!confirm(`تم العثور على ${oldLinks.length} رابط محلي. هل تريد نقلها إلى السحابة؟`)) return;
+
+        loadingOverlay.style.display = 'flex';
+        let addedCount = 0;
+        for (const link of oldLinks) {
+            if (!window.linksArray.some(l => l.url.toLowerCase() === link.url.toLowerCase())) {
+                try {
+                    await addDoc(collection(db, "links"), {
+                        url: link.url,
+                        category: link.category || "بدون تصنيف",
+                        desc: link.desc || "",
+                        pinned: link.pinned || false,
+                        date: link.date || new Date().toLocaleDateString('ar-EG'),
+                        timestamp: link.id || Date.now()
+                    });
+                    addedCount++;
+                } catch (e) { console.error("فشل في نقل رابط:", e); }
+            }
+        }
+        loadingOverlay.style.display = 'none';
+        
+        if(addedCount > 0) {
+            alert(`✅ تم نقل ${addedCount} رابط بنجاح إلى السحابة.`);
+        } else {
+            alert("✅ جميع روابطك القديمة موجودة بالفعل في السحابة.");
+        }
+        await fetchLinks();
+    }
+
+    // 3. الاسترداد من ملف (JSON) للسحابة
+    window.importToCloud = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const importedLinks = JSON.parse(event.target.result);
+                if (!Array.isArray(importedLinks)) {
+                    alert("الملف غير صالح! يجب أن يكون ملف روابط صحيح.");
+                    return;
+                }
+
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.innerText = "جاري استرداد البيانات للسحابة... ☁️";
+
+                let addedCount = 0;
+                for (const link of importedLinks) {
+                    const isDuplicate = window.linksArray.some(l => l.url.toLowerCase() === link.url.toLowerCase());
+                    if (!isDuplicate) {
+                        await addDoc(collection(db, "links"), {
+                            url: link.url,
+                            category: link.category || "عام",
+                            desc: link.desc || "",
+                            pinned: link.pinned || false,
+                            date: link.date || new Date().toLocaleDateString('ar-EG'),
+                            timestamp: link.timestamp || Date.now()
+                        });
+                        addedCount++;
+                    }
+                }
+
+                loadingOverlay.style.display = 'none';
+                loadingOverlay.innerText = "جاري العمليات... ☁️"; // إعادة النص الأصلي
+                
+                if (addedCount > 0) {
+                    alert(`✅ تم الاسترداد بنجاح! تم إضافة ${addedCount} رابط جديد للسحابة.`);
+                } else {
+                    alert("⚠️ لم يتم إضافة أي روابط، إما أنها مكررة أو الملف فارغ.");
+                }
+                await fetchLinks();
+
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ أثناء قراءة الملف. تأكد أنه ملف JSON مدعوم.");
+                loadingOverlay.style.display = 'none';
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // إعادة ضبط الحقل ليتيح اختيار نفس الملف مرة أخرى
+    };
+
+    // 4. حفظ وتعديل رابط
+    linkForm.onsubmit = async (e) => {
+        e.preventDefault();
+        loadingOverlay.style.display = 'flex'; 
+
+        const id = document.getElementById('editId').value;
+        let url = document.getElementById('linkUrl').value.trim();
+        const category = document.getElementById('linkCategory').value.trim();
+        let desc = document.getElementById('linkDesc').value.trim();
+
+        if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; }
+        if (!desc) {
+            try { desc = new URL(url).hostname.replace('www.', ''); } 
+            catch(e) { desc = "رابط بدون وصف"; }
+        }
+
+        try {
+            if (id) {
+                const linkRef = doc(db, "links", id);
+                await updateDoc(linkRef, { url, category, desc });
+                showToast("تم التحديث السحابي بنجاح! ☁️✏️");
+            } else {
+                if (window.linksArray.some(l => l.url.toLowerCase() === url.toLowerCase())) {
+                    alert("⚠️ هذا الرابط موجود مسبقاً!");
+                    loadingOverlay.style.display = 'none';
+                    return;
+                }
+                const newLink = {
+                    url, category, desc, pinned: false, 
+                    date: new Date().toLocaleDateString('ar-EG'),
+                    timestamp: Date.now()
+                };
+                await addDoc(collection(db, "links"), newLink);
+                showToast("تم الحفظ في السحابة بنجاح! ☁️✅");
+            }
+            window.resetForm();
+            await fetchLinks(); 
+        } catch (error) {
+            alert("حدث خطأ أثناء الحفظ! تأكد من صلاحيات قاعدة البيانات.");
+        } finally {
+            loadingOverlay.style.display = 'none'; 
+        }
+    };
+
+    // 5. حذف وتثبيت
+    window.deleteLink = async function(id) {
+        if(confirm('هل أنت متأكد من حذف هذا الرابط نهائياً من السحابة؟')) {
+            try {
+                await deleteDoc(doc(db, "links", id));
+                showToast("تم الحذف من السحابة 🗑️");
+                await fetchLinks();
+            } catch (error) { console.error(error); }
+        }
+    }
+
+    window.togglePin = async function(id, currentStatus) {
+        try {
+            const linkRef = doc(db, "links", id);
+            await updateDoc(linkRef, { pinned: !currentStatus });
+            await fetchLinks();
+        } catch (error) { console.error(error); }
+    }
+
+    // 6. واجهة المستخدم والتعديل
+    window.editLink = function(id) {
+        const link = window.linksArray.find(l => l.id === id);
+        document.getElementById('editId').value = link.id;
+        document.getElementById('linkUrl').value = link.url;
+        document.getElementById('linkCategory').value = link.category;
+        document.getElementById('linkDesc').value = link.desc;
+        document.getElementById('formTitle').innerText = "✏️ تعديل الرابط";
+        document.getElementById('cancelBtn').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.resetForm = function() {
+        linkForm.reset();
+        document.getElementById('editId').value = '';
+        document.getElementById('formTitle').innerText = "إضافة رابط جديد";
+        document.getElementById('cancelBtn').classList.add('hidden');
+    }
+
+    window.renderApp = function() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        document.getElementById('linkCounter').innerText = `الروابط: ${window.linksArray.length}`;
+
+        let filtered = window.linksArray.filter(l => 
+            (l.url.toLowerCase().includes(searchTerm) || 
+             l.category.toLowerCase().includes(searchTerm) || 
+             (l.desc && l.desc.toLowerCase().includes(searchTerm))) &&
+            (window.currentFilter === 'الكل' || l.category === window.currentFilter)
+        );
+
+        const container = document.getElementById('linksContainer');
+        container.innerHTML = '';
+
+        filtered.forEach(link => {
+            let domain = "";
+            try { domain = new URL(link.url).hostname.replace('www.', ''); } catch(e) { domain = "رابط غير صالح"; }
+            
+            const card = document.createElement('div');
+            card.className = `link-card ${link.pinned ? 'pinned' : ''}`;
+            card.innerHTML = `
+                <a href="${link.url}" target="_blank" class="link-title" title="${link.url}">${link.desc}</a>
+                <div class="link-desc" data-url="${link.url}">🔗 ${domain}</div>
+                <div class="card-actions">
+                    <div>
+                        <button class="icon-btn" onclick="togglePin('${link.id}', ${link.pinned})" title="${link.pinned ? 'إلغاء التثبيت' : 'تثبيت'}">${link.pinned ? '📌' : '📍'}</button>
+                        <button class="icon-btn" onclick="editLink('${link.id}')" title="تعديل">✏️</button>
+                        <button class="icon-btn" onclick="deleteLink('${link.id}')" title="حذف">🗑️</button>
+                    </div>
+                    <span style="color: var(--primary); font-weight: 500;">📁 ${link.category}</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        window.renderFiltersAndSuggestions();
+    }
+
+    window.renderFiltersAndSuggestions = function() {
+        const filterDiv = document.getElementById('categoryFilters');
+        const datalist = document.getElementById('categorySuggestions');
+        const cats = [...new Set(window.linksArray.map(l => l.category))].sort();
+        
+        filterDiv.innerHTML = ['الكل', ...cats].map(cat => `
+            <button class="filter-tag ${window.currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${cat}</button>
+        `).join('');
+
+        datalist.innerHTML = cats.map(cat => `<option value="${cat}">`).join('');
+    }
+
+    window.setFilter = function(cat) { window.currentFilter = cat; window.renderApp(); }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        if(msg) t.innerText = msg;
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    window.toggleTheme = function() {
+        document.body.toggleAttribute('data-theme');
+        const isDark = document.body.hasAttribute('data-theme');
+        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+        localStorage.setItem('darkMode', isDark);
+    }
+
+    if (localStorage.getItem('darkMode') === 'true') { window.toggleTheme(); }
+
+    // تصدير البيانات
+    window.exportData = function() {
+        if(window.linksArray.length === 0) return alert("لا يوجد بيانات لتصديرها!");
+        const blob = new Blob([JSON.stringify(window.linksArray, null, 2)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `روابط_السحابة_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+    }
+
+    // تشغيل الجلب عند بدء الصفحة
+    fetchLinks();
+</script>
+
+</body>
+</html>
