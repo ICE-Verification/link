@@ -3,35 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظم الروابط الذكي Pro - سحابي</title>
+    <title>منظم الروابط السحابي</title>
     
-    <!-- PWA & Mobile Meta Tags -->
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#4361ee">
-    
-    <!-- Inline Web App Manifest -->
-    <script type="application/manifest+json">
-    {
-      "name": "منظم الروابط السحابي",
-      "short_name": "الروابط",
-      "start_url": "./index.html",
-      "display": "standalone",
-      "background_color": "#f4f7f6",
-      "theme_color": "#4361ee",
-      "icons": [
-        {
-          "src": "https://img.icons8.com/color/192/cloud-link.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        },
-        {
-          "src": "https://img.icons8.com/color/512/cloud-link.png",
-          "sizes": "512x512",
-          "type": "image/png"
-        }
-      ]
-    }
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/192/cloud-link.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/cloud-link.png">
+
+    <!-- سكريبت توليد Manifest و Service Worker تلقائياً لتفعيل زر "تثبيت" في أندرويد -->
+    <script>
+        (function() {
+            const manifest = {
+                name: "منظم الروابط السحابي Pro",
+                short_name: "روابطي",
+                description: "منظم الروابط السحابي الذكي",
+                start_url: window.location.href.split('?')[0],
+                scope: window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1),
+                display: "standalone",
+                orientation: "portrait",
+                background_color: "#1a1a2e",
+                theme_color: "#4361ee",
+                icons: [
+                    {
+                        src: "https://img.icons8.com/fluency/192/cloud-link.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    },
+                    {
+                        src: "https://img.icons8.com/fluency/512/cloud-link.png",
+                        sizes: "512x512",
+                        type: "image/png",
+                        purpose: "any maskable"
+                    }
+                ]
+            };
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest));
+            document.head.appendChild(link);
+        })();
     </script>
 
     <style>
@@ -39,10 +53,13 @@
         [data-theme="dark"] { --bg: #1a1a2e; --card: #16213e; --text: #edf2f4; --border: #243447; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
         .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         
-        .controls-top { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
-        .controls-top input[type="text"] { flex-grow: 1; min-width: 220px; margin-bottom: 0; }
+        /* تحسين الترويسة للموبايل لمنع انكسار النص */
+        header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        header h1 { font-size: 1.35rem; margin: 0; white-space: nowrap; }
+        
+        .controls-top { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; align-items: center; }
+        .controls-top input[type="text"] { flex-grow: 1; min-width: 100%; margin-bottom: 4px; }
         
         .form-card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border); position: relative;}
         
@@ -50,7 +67,7 @@
         [data-theme="dark"] #loadingOverlay { background: rgba(22, 33, 62, 0.8); }
 
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); box-sizing: border-box; font-family: inherit; }
-        .btn { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: opacity 0.2s; white-space: nowrap; }
+        .btn { padding: 10px 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: opacity 0.2s; white-space: nowrap; font-size: 0.9rem; }
         .btn:hover { opacity: 0.9; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { border: 1px solid var(--border); background: var(--card); color: var(--text); }
@@ -58,10 +75,10 @@
         .btn-warning { background: #fca311; color: white; }
         
         .filters { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding: 5px; scrollbar-width: thin; }
-        .filter-tag { padding: 6px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-size: 0.9rem; }
+        .filter-tag { padding: 6px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-size: 0.85rem; color: var(--text); }
         .filter-tag.active { background: var(--primary); color: white; border-color: var(--primary); }
         
-        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
         .link-card { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); position: relative; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
         .link-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .link-card.pinned { border-right: 4px solid var(--primary); }
@@ -69,19 +86,18 @@
         .link-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         .site-favicon { width: 20px; height: 20px; border-radius: 4px; object-fit: contain; }
         .link-title { font-weight: bold; color: var(--primary); text-decoration: none; font-size: 1.05rem; line-height: 1.4; flex-grow: 1; word-break: break-word; }
-        .link-desc { font-size: 0.85rem; color: #718096; margin-bottom: 12px; }
+        .link-desc { font-size: 0.85rem; color: #718096; margin-bottom: 12px; word-break: break-all; }
         
         .card-actions { border-top: 1px solid var(--border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
         .action-group { display: flex; gap: 4px; }
         .icon-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 6px; border-radius: 5px; transition: background 0.2s; }
         .icon-btn:hover { background: var(--bg); }
         
-        /* Lock Screen Modal */
         #lockScreen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .lock-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .lock-box input { text-align: center; font-size: 1.5rem; letter-spacing: 5px; }
 
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 10px 25px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: 0.9rem; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 10px 25px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: 0.9rem; white-space: nowrap; }
         .hidden { display: none !important; }
         
         @media print { body { background: white; color: black; padding: 0; } .form-card, .controls-top, .filters, .card-actions, #themeBtn, #cancelBtn, .icon-btn, #lockToggleBtn { display: none !important; } .links-grid { display: block; } .link-card { border: none; border-bottom: 1px solid #ccc; margin-bottom: 15px; padding: 10px 0; break-inside: avoid; } .link-title { font-size: 1.2rem; color: black; text-decoration: underline; } }
@@ -89,12 +105,11 @@
 </head>
 <body>
 
-<!-- شاشة قفل الحماية -->
 <div id="lockScreen" class="hidden">
     <div class="lock-box">
         <h3>🔒 قفل حماية الروابط</h3>
-        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">أدخل رمز المرور لفتح التطبيق (الافتراضي: 473046)</p>
-        <input type="password" id="pinInput" maxlength="6" placeholder="••••••">
+        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">أدخل رمز المرور لفتح التطبيق</p>
+        <input type="password" id="pinInput" inputmode="numeric" maxlength="6" placeholder="••••••">
         <button onclick="verifyPin()" class="btn btn-primary" style="width: 100%; margin-top: 10px;">فتح القفل</button>
         <p id="lockError" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px;" class="hidden">رمز المرور غير صحيح!</p>
     </div>
@@ -123,7 +138,7 @@
 
     <div class="form-card">
         <div id="loadingOverlay">جاري العمليات... ☁️</div>
-        <h3 id="formTitle">إضافة رابط جديد</h3>
+        <h3 id="formTitle" style="margin-top:0;">إضافة رابط جديد</h3>
         <form id="linkForm">
             <input type="hidden" id="editId">
             <input type="url" id="linkUrl" placeholder="🔗 أضف الرابط هنا (مثال: https://example.com)" required>
@@ -162,7 +177,6 @@
     window.currentFilter = 'الكل';
     const CORRECT_PIN = "473046";
 
-    // إدارة قفل الأمان
     function checkLockStatus() {
         const isLockedSetting = localStorage.getItem('appLocked') === 'true';
         const isSessionUnlocked = sessionStorage.getItem('unlocked') === 'true';
@@ -204,7 +218,6 @@
         }
     }
 
-    // تعيين القفل افتراضياً مفعلاً أو حسب رغبة المستخدم (هنا نبدأ مفعل بالرمز المطلوب)
     if (localStorage.getItem('appLocked') === null) {
         localStorage.setItem('appLocked', 'true');
     }
@@ -213,7 +226,6 @@
     const linkForm = document.getElementById('linkForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    // 1. الاستماع اللحظي الفوري للبيانات (Real-time Sync)
     function initRealtimeSync() {
         try {
             onSnapshot(collection(db, "links"), (snapshot) => {
@@ -232,7 +244,6 @@
         }
     }
 
-    // 2. نقل الروابط المحلية القديمة
     window.migrateOldLinks = async function() {
         const oldLinks = JSON.parse(localStorage.getItem('finalLinks')) || [];
         if (oldLinks.length === 0) {
@@ -262,7 +273,6 @@
         alert(`✅ تم نقل ${added} رابط بنجاح للسحابة.`);
     }
 
-    // 3. استيراد ملف JSON
     window.importToCloud = async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -297,7 +307,6 @@
         e.target.value = '';
     }
 
-    // 4. حفظ وتعديل رابط
     linkForm.onsubmit = async (e) => {
         e.preventDefault();
         loadingOverlay.style.display = 'flex';
@@ -371,7 +380,6 @@
         document.getElementById('cancelBtn').classList.add('hidden');
     }
 
-    // إجراءات سريعة إضافية للموبايل
     window.copyToClipboard = function(url) {
         navigator.clipboard.writeText(url);
         showToast("📋 تم نسخ الرابط");
@@ -435,7 +443,6 @@
         const filterDiv = document.getElementById('categoryFilters');
         const datalist = document.getElementById('categorySuggestions');
         
-        // حساب عدد الروابط لكل تصنيف
         const counts = {};
         window.linksArray.forEach(l => {
             counts[l.category] = (counts[l.category] || 0) + 1;
@@ -478,7 +485,6 @@
         a.click();
     }
 
-    // تشغيل المزامنة الفورية عند فتح التطبيق
     initRealtimeSync();
 </script>
 
