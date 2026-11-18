@@ -2,67 +2,121 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>منظم الروابط الذكي Pro - سحابي</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4361ee">
+    
+    <!-- Inline Web App Manifest -->
+    <script type="application/manifest+json">
+    {
+      "name": "منظم الروابط السحابي",
+      "short_name": "الروابط",
+      "start_url": "./index.html",
+      "display": "standalone",
+      "background_color": "#f4f7f6",
+      "theme_color": "#4361ee",
+      "icons": [
+        {
+          "src": "https://img.icons8.com/color/192/cloud-link.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "https://img.icons8.com/color/512/cloud-link.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }
+    </script>
+
     <style>
         :root { --primary: #4361ee; --bg: #f4f7f6; --card: #ffffff; --text: #2b2d42; --border: #e2e8f0; --success: #06d6a0; --danger: #ef476f; }
         [data-theme="dark"] { --bg: #1a1a2e; --card: #16213e; --text: #edf2f4; --border: #243447; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         
         .controls-top { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
-        .controls-top input[type="text"] { flex-grow: 1; min-width: 250px; margin-bottom: 0; }
+        .controls-top input[type="text"] { flex-grow: 1; min-width: 220px; margin-bottom: 0; }
         
-        .form-card { background: var(--card); padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--border); position: relative;}
+        .form-card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid var(--border); position: relative;}
         
         #loadingOverlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; justify-content: center; align-items: center; border-radius: 15px; z-index: 10; font-weight: bold; color: var(--primary);}
         [data-theme="dark"] #loadingOverlay { background: rgba(22, 33, 62, 0.8); }
 
         input, textarea { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); box-sizing: border-box; font-family: inherit; }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: opacity 0.2s; white-space: nowrap; }
+        .btn { padding: 10px 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: opacity 0.2s; white-space: nowrap; }
         .btn:hover { opacity: 0.9; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { border: 1px solid var(--border); background: var(--card); color: var(--text); }
         .btn-print { background: #2d3436; color: white; }
         .btn-warning { background: #fca311; color: white; }
         
-        .filters { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding: 5px; scrollbar-width: thin; }
-        .filter-tag { padding: 6px 15px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .filters { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding: 5px; scrollbar-width: thin; }
+        .filter-tag { padding: 6px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-size: 0.9rem; }
         .filter-tag.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
-        .link-card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); position: relative; transition: transform 0.2s; }
+        
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .link-card { background: var(--card); border-radius: 12px; padding: 16px; border: 1px solid var(--border); position: relative; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
         .link-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .link-card.pinned { border-right: 4px solid var(--primary); }
-        .link-title { font-weight: bold; color: var(--primary); text-decoration: none; display: block; margin-bottom: 5px; font-size: 1.1rem; line-height: 1.4; }
-        .link-desc { font-size: 0.9rem; color: #718096; margin-bottom: 15px; }
+        
+        .link-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .site-favicon { width: 20px; height: 20px; border-radius: 4px; object-fit: contain; }
+        .link-title { font-weight: bold; color: var(--primary); text-decoration: none; font-size: 1.05rem; line-height: 1.4; flex-grow: 1; word-break: break-word; }
+        .link-desc { font-size: 0.85rem; color: #718096; margin-bottom: 12px; }
+        
         .card-actions { border-top: 1px solid var(--border); padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
-        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 5px; border-radius: 5px; transition: background 0.2s; }
+        .action-group { display: flex; gap: 4px; }
+        .icon-btn { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 6px; border-radius: 5px; transition: background 0.2s; }
         .icon-btn:hover { background: var(--bg); }
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 30px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        
+        /* Lock Screen Modal */
+        #lockScreen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .lock-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .lock-box input { text-align: center; font-size: 1.5rem; letter-spacing: 5px; }
+
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 10px 25px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-size: 0.9rem; }
         .hidden { display: none !important; }
-        @media print { body { background: white; color: black; padding: 0; } .form-card, .controls-top, .filters, .card-actions, #themeBtn, #cancelBtn, .icon-btn { display: none !important; } .links-grid { display: block; } .link-card { border: none; border-bottom: 1px solid #ccc; margin-bottom: 15px; padding: 10px 0; break-inside: avoid; } .link-title { font-size: 1.2rem; color: black; text-decoration: underline; } .link-desc::after { content: " [" attr(data-url) "]"; color: #555; font-size: 0.8rem; display: block; margin-top: 5px; } }
+        
+        @media print { body { background: white; color: black; padding: 0; } .form-card, .controls-top, .filters, .card-actions, #themeBtn, #cancelBtn, .icon-btn, #lockToggleBtn { display: none !important; } .links-grid { display: block; } .link-card { border: none; border-bottom: 1px solid #ccc; margin-bottom: 15px; padding: 10px 0; break-inside: avoid; } .link-title { font-size: 1.2rem; color: black; text-decoration: underline; } }
     </style>
 </head>
 <body>
+
+<!-- شاشة قفل الحماية -->
+<div id="lockScreen" class="hidden">
+    <div class="lock-box">
+        <h3>🔒 قفل حماية الروابط</h3>
+        <p style="font-size: 0.85rem; color: #718096; margin-bottom: 15px;">أدخل رمز المرور لفتح التطبيق (الافتراضي: 473046)</p>
+        <input type="password" id="pinInput" maxlength="6" placeholder="••••••">
+        <button onclick="verifyPin()" class="btn btn-primary" style="width: 100%; margin-top: 10px;">فتح القفل</button>
+        <p id="lockError" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px;" class="hidden">رمز المرور غير صحيح!</p>
+    </div>
+</div>
 
 <div id="toast">✅ تم الإجراء بنجاح!</div>
 
 <div class="container">
     <header>
         <h1>☁️ منظم الروابط السحابي</h1>
-        <div style="display:flex; gap:10px; align-items: center;">
-            <span id="linkCounter" class="stats-badge" style="font-weight: bold;">جاري التحميل... ⏳</span>
+        <div style="display:flex; gap:8px; align-items: center;">
+            <span id="linkCounter" style="font-weight: bold; font-size: 0.9rem;">جاري التحميل... ⏳</span>
+            <button onclick="toggleAppLock()" class="btn btn-outline" id="lockToggleBtn" title="تفعيل/إيقاف القفل">🔒</button>
             <button onclick="toggleTheme()" class="btn btn-outline" id="themeBtn" title="تبديل المظهر">🌙</button>
         </div>
     </header>
 
     <div class="controls-top">
         <input type="text" id="searchInput" placeholder="🔍 ابحث في الروابط، التصنيفات، أو الوصف..." oninput="renderApp()">
-        
-        <button onclick="migrateOldLinks()" class="btn btn-warning">🔄 استرجاع محلي للسحابة</button>
+        <button onclick="migrateOldLinks()" class="btn btn-warning">🔄 استرجاع محلي</button>
         <button onclick="exportData()" class="btn btn-outline">📥 تصدير</button>
-        <button onclick="document.getElementById('importFile').click()" class="btn btn-outline">📤 استرداد من ملف</button>
+        <button onclick="document.getElementById('importFile').click()" class="btn btn-outline">📤 استيراد</button>
         <input type="file" id="importFile" class="hidden" accept=".json" onchange="importToCloud(event)">
         <button onclick="window.print()" class="btn btn-print">🖨️ طباعة</button>
     </div>
@@ -79,7 +133,7 @@
             
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button type="submit" class="btn btn-primary" id="saveBtn">💾 حفظ الرابط</button>
-                <button type="button" onclick="resetForm()" class="btn btn-outline hidden" id="cancelBtn">❌ إلغاء التعديل</button>
+                <button type="button" onclick="resetForm()" class="btn btn-outline hidden" id="cancelBtn">❌ إلغاء</button>
             </div>
         </form>
     </div>
@@ -89,10 +143,9 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
-    // إعدادات مشروعك
     const firebaseConfig = {
         apiKey: "AIzaSyA6sVrvnlSoXNy1aiqdT5QfP_NPtIbAvm8",
         authDomain: "azzamlinks-organizer.firebaseapp.com",
@@ -107,181 +160,199 @@
 
     window.linksArray = [];
     window.currentFilter = 'الكل';
+    const CORRECT_PIN = "473046";
+
+    // إدارة قفل الأمان
+    function checkLockStatus() {
+        const isLockedSetting = localStorage.getItem('appLocked') === 'true';
+        const isSessionUnlocked = sessionStorage.getItem('unlocked') === 'true';
+        if (isLockedSetting && !isSessionUnlocked) {
+            document.getElementById('lockScreen').classList.remove('hidden');
+            document.getElementById('lockToggleBtn').innerText = '🔓';
+        } else {
+            document.getElementById('lockScreen').classList.add('hidden');
+            document.getElementById('lockToggleBtn').innerText = isLockedSetting ? '🔒' : '🔓';
+        }
+    }
+
+    window.verifyPin = function() {
+        const val = document.getElementById('pinInput').value;
+        if (val === CORRECT_PIN) {
+            sessionStorage.setItem('unlocked', 'true');
+            document.getElementById('lockScreen').classList.add('hidden');
+            showToast("✅ تم فتح القفل بنجاح");
+        } else {
+            const err = document.getElementById('lockError');
+            err.classList.remove('hidden');
+            setTimeout(() => err.classList.add('hidden'), 2000);
+        }
+    }
+
+    window.toggleAppLock = function() {
+        const current = localStorage.getItem('appLocked') === 'true';
+        if (current) {
+            if(confirm("هل تريد إيقاف ميزة رمز المرور نهائياً؟")) {
+                localStorage.setItem('appLocked', 'false');
+                sessionStorage.removeItem('unlocked');
+                checkLockStatus();
+                showToast("تم إيقاف قفل الحماية");
+            }
+        } else {
+            localStorage.setItem('appLocked', 'true');
+            checkLockStatus();
+            showToast("تم تفعيل قفل الحماية برمز المرور (473046)");
+        }
+    }
+
+    // تعيين القفل افتراضياً مفعلاً أو حسب رغبة المستخدم (هنا نبدأ مفعل بالرمز المطلوب)
+    if (localStorage.getItem('appLocked') === null) {
+        localStorage.setItem('appLocked', 'true');
+    }
+    checkLockStatus();
 
     const linkForm = document.getElementById('linkForm');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
-    // 1. جلب البيانات
-    async function fetchLinks() {
+    // 1. الاستماع اللحظي الفوري للبيانات (Real-time Sync)
+    function initRealtimeSync() {
         try {
-            const querySnapshot = await getDocs(collection(db, "links"));
-            window.linksArray = [];
-            querySnapshot.forEach((doc) => {
-                window.linksArray.push({ id: doc.id, ...doc.data() });
+            onSnapshot(collection(db, "links"), (snapshot) => {
+                window.linksArray = [];
+                snapshot.forEach((doc) => {
+                    window.linksArray.push({ id: doc.id, ...doc.data() });
+                });
+                window.linksArray.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.timestamp - a.timestamp);
+                window.renderApp();
+            }, (error) => {
+                console.error("خطأ مزامنة:", error);
+                document.getElementById('linkCounter').innerText = "خطأ في الاتصال ❌";
             });
-            window.linksArray.sort((a, b) => b.pinned - a.pinned || b.timestamp - a.timestamp);
-            window.renderApp();
-        } catch (error) {
-            console.error("خطأ:", error);
-            document.getElementById('linkCounter').innerText = "خطأ في الاتصال ❌";
+        } catch (err) {
+            console.error(err);
         }
     }
 
-    // 2. دالة نقل الروابط القديمة من المتصفح إلى السحابة
+    // 2. نقل الروابط المحلية القديمة
     window.migrateOldLinks = async function() {
         const oldLinks = JSON.parse(localStorage.getItem('finalLinks')) || [];
-        
         if (oldLinks.length === 0) {
-            alert("لا يوجد روابط قديمة محفوظة في متصفحك الحالي.");
+            alert("لا يوجد روابط قديمة محفوظة محلياً.");
             return;
         }
-
-        if(!confirm(`تم العثور على ${oldLinks.length} رابط محلي. هل تريد نقلها إلى السحابة؟`)) return;
+        if(!confirm(`تم العثور على ${oldLinks.length} رابط محلي. هل تريد نقلها للسحابة؟`)) return;
 
         loadingOverlay.style.display = 'flex';
-        let addedCount = 0;
-        for (const link of oldLinks) {
-            if (!window.linksArray.some(l => l.url.toLowerCase() === link.url.toLowerCase())) {
+        let added = 0;
+        for (const l of oldLinks) {
+            if (!window.linksArray.some(item => item.url.toLowerCase() === l.url.toLowerCase())) {
                 try {
                     await addDoc(collection(db, "links"), {
-                        url: link.url,
-                        category: link.category || "بدون تصنيف",
-                        desc: link.desc || "",
-                        pinned: link.pinned || false,
-                        date: link.date || new Date().toLocaleDateString('ar-EG'),
-                        timestamp: link.id || Date.now()
+                        url: l.url,
+                        category: l.category || "عام",
+                        desc: l.desc || "",
+                        pinned: l.pinned || false,
+                        date: l.date || new Date().toLocaleDateString('ar-EG'),
+                        timestamp: l.id || Date.now()
                     });
-                    addedCount++;
-                } catch (e) { console.error("فشل في نقل رابط:", e); }
+                    added++;
+                } catch(e) { console.error(e); }
             }
         }
         loadingOverlay.style.display = 'none';
-        
-        if(addedCount > 0) {
-            alert(`✅ تم نقل ${addedCount} رابط بنجاح إلى السحابة.`);
-        } else {
-            alert("✅ جميع روابطك القديمة موجودة بالفعل في السحابة.");
-        }
-        await fetchLinks();
+        alert(`✅ تم نقل ${added} رابط بنجاح للسحابة.`);
     }
 
-    // 3. الاسترداد من ملف (JSON) للسحابة
+    // 3. استيراد ملف JSON
     window.importToCloud = async function(e) {
         const file = e.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = async (event) => {
             try {
-                const importedLinks = JSON.parse(event.target.result);
-                if (!Array.isArray(importedLinks)) {
-                    alert("الملف غير صالح! يجب أن يكون ملف روابط صحيح.");
-                    return;
-                }
-
+                const imported = JSON.parse(event.target.result);
+                if (!Array.isArray(imported)) return alert("ملف غير صالح");
                 loadingOverlay.style.display = 'flex';
-                loadingOverlay.innerText = "جاري استرداد البيانات للسحابة... ☁️";
-
-                let addedCount = 0;
-                for (const link of importedLinks) {
-                    const isDuplicate = window.linksArray.some(l => l.url.toLowerCase() === link.url.toLowerCase());
-                    if (!isDuplicate) {
+                let count = 0;
+                for (const l of imported) {
+                    if (!window.linksArray.some(item => item.url.toLowerCase() === l.url.toLowerCase())) {
                         await addDoc(collection(db, "links"), {
-                            url: link.url,
-                            category: link.category || "عام",
-                            desc: link.desc || "",
-                            pinned: link.pinned || false,
-                            date: link.date || new Date().toLocaleDateString('ar-EG'),
-                            timestamp: link.timestamp || Date.now()
+                            url: l.url,
+                            category: l.category || "عام",
+                            desc: l.desc || "",
+                            pinned: l.pinned || false,
+                            date: l.date || new Date().toLocaleDateString('ar-EG'),
+                            timestamp: l.timestamp || Date.now()
                         });
-                        addedCount++;
+                        count++;
                     }
                 }
-
                 loadingOverlay.style.display = 'none';
-                loadingOverlay.innerText = "جاري العمليات... ☁️"; // إعادة النص الأصلي
-                
-                if (addedCount > 0) {
-                    alert(`✅ تم الاسترداد بنجاح! تم إضافة ${addedCount} رابط جديد للسحابة.`);
-                } else {
-                    alert("⚠️ لم يتم إضافة أي روابط، إما أنها مكررة أو الملف فارغ.");
-                }
-                await fetchLinks();
-
-            } catch (err) {
-                console.error(err);
-                alert("حدث خطأ أثناء قراءة الملف. تأكد أنه ملف JSON مدعوم.");
+                alert(`✅ تم استيراد ${count} رابط بنجاح.`);
+            } catch(err) {
                 loadingOverlay.style.display = 'none';
+                alert("حدث خطأ أثناء قراءة الملف.");
             }
         };
         reader.readAsText(file);
-        e.target.value = ''; // إعادة ضبط الحقل ليتيح اختيار نفس الملف مرة أخرى
-    };
+        e.target.value = '';
+    }
 
     // 4. حفظ وتعديل رابط
     linkForm.onsubmit = async (e) => {
         e.preventDefault();
-        loadingOverlay.style.display = 'flex'; 
+        loadingOverlay.style.display = 'flex';
 
         const id = document.getElementById('editId').value;
         let url = document.getElementById('linkUrl').value.trim();
         const category = document.getElementById('linkCategory').value.trim();
         let desc = document.getElementById('linkDesc').value.trim();
 
-        if (!/^https?:\/\//i.test(url)) { url = 'https://' + url; }
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         if (!desc) {
             try { desc = new URL(url).hostname.replace('www.', ''); } 
-            catch(e) { desc = "رابط بدون وصف"; }
+            catch(e) { desc = "رابط سحابي"; }
         }
 
         try {
             if (id) {
-                const linkRef = doc(db, "links", id);
-                await updateDoc(linkRef, { url, category, desc });
-                showToast("تم التحديث السحابي بنجاح! ☁️✏️");
+                await updateDoc(doc(db, "links", id), { url, category, desc });
+                showToast("تم التحديث بنجاح ✏️");
             } else {
                 if (window.linksArray.some(l => l.url.toLowerCase() === url.toLowerCase())) {
                     alert("⚠️ هذا الرابط موجود مسبقاً!");
                     loadingOverlay.style.display = 'none';
                     return;
                 }
-                const newLink = {
-                    url, category, desc, pinned: false, 
+                await addDoc(collection(db, "links"), {
+                    url, category, desc, pinned: false,
                     date: new Date().toLocaleDateString('ar-EG'),
                     timestamp: Date.now()
-                };
-                await addDoc(collection(db, "links"), newLink);
-                showToast("تم الحفظ في السحابة بنجاح! ☁️✅");
+                });
+                showToast("تم الحفظ في السحابة ✅");
             }
             window.resetForm();
-            await fetchLinks(); 
         } catch (error) {
-            alert("حدث خطأ أثناء الحفظ! تأكد من صلاحيات قاعدة البيانات.");
+            alert("خطأ أثناء الحفظ! تأكد من صلاحيات القواعد.");
         } finally {
-            loadingOverlay.style.display = 'none'; 
+            loadingOverlay.style.display = 'none';
         }
     };
 
-    // 5. حذف وتثبيت
     window.deleteLink = async function(id) {
-        if(confirm('هل أنت متأكد من حذف هذا الرابط نهائياً من السحابة؟')) {
+        if(confirm('هل أنت متأكد من الحذف؟')) {
             try {
                 await deleteDoc(doc(db, "links", id));
-                showToast("تم الحذف من السحابة 🗑️");
-                await fetchLinks();
-            } catch (error) { console.error(error); }
+                showToast("تم الحذف بنجاح 🗑️");
+            } catch (e) { console.error(e); }
         }
     }
 
     window.togglePin = async function(id, currentStatus) {
         try {
-            const linkRef = doc(db, "links", id);
-            await updateDoc(linkRef, { pinned: !currentStatus });
-            await fetchLinks();
-        } catch (error) { console.error(error); }
+            await updateDoc(doc(db, "links", id), { pinned: !currentStatus });
+        } catch (e) { console.error(e); }
     }
 
-    // 6. واجهة المستخدم والتعديل
     window.editLink = function(id) {
         const link = window.linksArray.find(l => l.id === id);
         document.getElementById('editId').value = link.id;
@@ -300,10 +371,23 @@
         document.getElementById('cancelBtn').classList.add('hidden');
     }
 
+    // إجراءات سريعة إضافية للموبايل
+    window.copyToClipboard = function(url) {
+        navigator.clipboard.writeText(url);
+        showToast("📋 تم نسخ الرابط");
+    }
+
+    window.shareLink = function(url, title) {
+        if (navigator.share) {
+            navigator.share({ title: title, url: url }).catch(() => {});
+        } else {
+            copyToClipboard(url);
+        }
+    }
+
     window.renderApp = function() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        document.getElementById('linkCounter').innerText = `الروابط: ${window.linksArray.length}`;
-
+        
         let filtered = window.linksArray.filter(l => 
             (l.url.toLowerCase().includes(searchTerm) || 
              l.category.toLowerCase().includes(searchTerm) || 
@@ -311,25 +395,35 @@
             (window.currentFilter === 'الكل' || l.category === window.currentFilter)
         );
 
+        document.getElementById('linkCounter').innerText = `الروابط: ${window.linksArray.length}`;
+
         const container = document.getElementById('linksContainer');
         container.innerHTML = '';
 
         filtered.forEach(link => {
             let domain = "";
-            try { domain = new URL(link.url).hostname.replace('www.', ''); } catch(e) { domain = "رابط غير صالح"; }
-            
+            try { domain = new URL(link.url).hostname.replace('www.', ''); } catch(e) { domain = link.url; }
+            const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+
             const card = document.createElement('div');
             card.className = `link-card ${link.pinned ? 'pinned' : ''}`;
             card.innerHTML = `
-                <a href="${link.url}" target="_blank" class="link-title" title="${link.url}">${link.desc}</a>
-                <div class="link-desc" data-url="${link.url}">🔗 ${domain}</div>
+                <div>
+                    <div class="link-header">
+                        <img src="${faviconUrl}" class="site-favicon" onerror="this.style.display='none'">
+                        <a href="${link.url}" target="_blank" class="link-title" title="${link.url}">${link.desc || domain}</a>
+                    </div>
+                    <div class="link-desc">🔗 ${domain}</div>
+                </div>
                 <div class="card-actions">
-                    <div>
+                    <div class="action-group">
                         <button class="icon-btn" onclick="togglePin('${link.id}', ${link.pinned})" title="${link.pinned ? 'إلغاء التثبيت' : 'تثبيت'}">${link.pinned ? '📌' : '📍'}</button>
+                        <button class="icon-btn" onclick="copyToClipboard('${link.url}')" title="نسخ الرابط">📋</button>
+                        <button class="icon-btn" onclick="shareLink('${link.url}', '${link.desc}')" title="مشاركة">📤</button>
                         <button class="icon-btn" onclick="editLink('${link.id}')" title="تعديل">✏️</button>
                         <button class="icon-btn" onclick="deleteLink('${link.id}')" title="حذف">🗑️</button>
                     </div>
-                    <span style="color: var(--primary); font-weight: 500;">📁 ${link.category}</span>
+                    <span style="color: var(--primary); font-weight: 500; font-size: 0.75rem;">📁 ${link.category}</span>
                 </div>
             `;
             container.appendChild(card);
@@ -340,11 +434,19 @@
     window.renderFiltersAndSuggestions = function() {
         const filterDiv = document.getElementById('categoryFilters');
         const datalist = document.getElementById('categorySuggestions');
-        const cats = [...new Set(window.linksArray.map(l => l.category))].sort();
         
-        filterDiv.innerHTML = ['الكل', ...cats].map(cat => `
-            <button class="filter-tag ${window.currentFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">${cat}</button>
-        `).join('');
+        // حساب عدد الروابط لكل تصنيف
+        const counts = {};
+        window.linksArray.forEach(l => {
+            counts[l.category] = (counts[l.category] || 0) + 1;
+        });
+
+        const cats = Object.keys(counts).sort();
+        
+        filterDiv.innerHTML = [`الكل (${window.linksArray.length})`, ...cats.map(c => `${c} (${counts[c]})`)].map(item => {
+            const catName = item.split(' (')[0];
+            return `<button class="filter-tag ${window.currentFilter === catName ? 'active' : ''}" onclick="setFilter('${catName}')">${item}</button>`;
+        }).join('');
 
         datalist.innerHTML = cats.map(cat => `<option value="${cat}">`).join('');
     }
@@ -367,7 +469,6 @@
 
     if (localStorage.getItem('darkMode') === 'true') { window.toggleTheme(); }
 
-    // تصدير البيانات
     window.exportData = function() {
         if(window.linksArray.length === 0) return alert("لا يوجد بيانات لتصديرها!");
         const blob = new Blob([JSON.stringify(window.linksArray, null, 2)], {type: 'application/json'});
@@ -377,8 +478,8 @@
         a.click();
     }
 
-    // تشغيل الجلب عند بدء الصفحة
-    fetchLinks();
+    // تشغيل المزامنة الفورية عند فتح التطبيق
+    initRealtimeSync();
 </script>
 
 </body>
